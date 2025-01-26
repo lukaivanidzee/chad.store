@@ -1,6 +1,6 @@
-from django.db.models import TextField
+from django.db.models import TextChoices
 
-class Currency(TextField):
+class Currency(TextChoices):
     GEL = 'gel', '₾'
     USD = 'usd', '$'
     EURO = 'euro', '€'
