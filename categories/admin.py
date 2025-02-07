@@ -1,10 +1,13 @@
 from django.contrib import admin
 from categories.models import Category, CategoryImage
 
-class CategoryImageInline(admin.TabularInline):
+admin.site.register(CategoryImage)
+
+class CategoryImageInLine(admin.StackedInline):
     model = CategoryImage
-    extra = 1
+    extra = 0 
 
 @admin.register(Category)
-class CategoryAmin(admin.ModelAdmin):
-    inlines = [CategoryImageInline]
+class CategoryModelAdmin(admin.ModelAdmin):
+    inlines = [CategoryImageInLine]
+
