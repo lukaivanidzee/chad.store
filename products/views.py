@@ -3,76 +3,34 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
+from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.mixins import ListModelMixin, CreateModelMixin, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin
 
-from products.models import Product, Cart, ProductTag, FavoriteProduct
+from products.models import Product, Cart, ProductTag, FavoriteProduct, Review
 from products.serializers import ProductSerializer, ReviewSerializer, CartSerializer, ProductTagSerializer, FavoriteProductSerializer
 
 
-class ProductListCreateView(APIView):
-    def get(self, request):
-        products = Product.objects.all()
-        serializer = ProductSerializer(products, many=True)
-        return Response(serializer.data)
+class ProductViewSet(ListModelMixin, CreateModelMixin, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin, GenericAPIView):
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+
+    def get(self, request, pk=None, *args, **kwargs ):
+        if pk:
+            return self.retrieve(request, *args, **kwargs)
+        return self.list(request, *args, **kwargs)
     
-    def post(self, request):
-        serializer = ProductSerializer(data=request.data)
-        if serializer.is_valid():
-            product = serializer.save()
-            return Response({"id": product.id}, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        
-
-class ProductDetailView(APIView):
-    def get(self, request, pk):
-        obj = get_object_or_404(Product, pk=pk)
-        serializer = ProductSerializer(obj)
-        return Response(serializer.data)
+    def post(self, request, *args, **kwargs):
+        return self.create(request, *args, **kwargs)
     
-    def put(self, request, pk):
-        obj = get_object_or_404(Product, pk=pk)
-        serializer = ProductSerializer(obj, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def put(self, request, *args, **kwargs):
+        return self.update(request, *args, **kwargs)
     
-    def patch(self, request, pk):
-        obj = get_object_or_404(Product, pk=pk)
-        serializer = ProductSerializer(obj, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def patch(self, request, *args, **kwargs):
+        return self.partial_update(request, *args, **kwargs)
     
-    def delete(self, request, pk):
-        obj = get_object_or_404(Product, pk=pk)
-        obj.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
-class CartView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        cart_items = Cart.objects.filter(user=request.user)
-        serializer = CartSerializer(cart_items, many=True)
-        return Response(serializer.data)
-
-    def post(self, request):
-        product_id = request.data.get("product_id")
-        quantity = request.data.get("quantity")
-
-        product = get_object_or_404(Product, id=product_id)
-
-        if not isinstance(quantity, int) or quantity <= 0:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-
-        cart_item, created = Cart.objects.get_or_create(user=request.user, product=product)
-        cart_item.quantity += quantity
-        cart_item.save()
-
-        return Response(CartSerializer(cart_item).data, status=status.HTTP_201_CREATED)
-
+    def delete(self, request, *args, **kwargs):
+        return self.destroy(request, *args, **kwargs)
 
 class ProductTagView(APIView):
     def get(self, request, product_id):
@@ -91,20 +49,48 @@ class ProductTagView(APIView):
         tag, created = ProductTag.objects.get_or_create(product=product, tag_name=tag_name)
 
         return Response(ProductTagSerializer(tag).data, status=status.HTTP_201_CREATED)
+    
+class ReviewViewSet(ListModelMixin, CreateModelMixin, GenericAPIView):
+    serializer_class = ReviewSerializer
+    queryset = Review.objects.all()
 
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)
+    
+    def post(self, request, *args, **kwargs):
+        return self.create(request, *args, **kwargs)
 
-class FavoriteProductView(APIView):
+class FavoriteProductViewSet(GenericAPIView, CreateModelMixin, DestroyModelMixin, ListModelMixin, RetrieveModelMixin):
+    serializer_class = FavoriteProductSerializer
+    queryset = FavoriteProduct.objects.all()
     permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        queryset = self.queryset.filter(user=self.request.user)
+        return queryset
+    
+    def get(self, request, pk=None, *args, **kwargs):
+        if pk:
+            return self.retrieve(request, *args, **kwargs)
+        return self.list(request, *args, **kwargs)
 
-    def get(self, request):
-        favorites = FavoriteProduct.objects.filter(user=request.user)
-        serializer = FavoriteProductSerializer(favorites, many=True)
-        return Response(serializer.data)
+    def post(self, request, *args, **kwargs):
+        return self.create(request, *args, **kwargs)
+    
+    def delete(self, request, *args, **kwargs):
+        return self.destroy(request, *args, **kwargs)
+    
+class CartViewSet(GenericAPIView, ListModelMixin, CreateModelMixin, DestroyModelMixin):
+    permission_classes = [IsAuthenticated]
+    serializer_class = CartSerializer
+    queryset = Cart.objects.all()
 
-    def post(self, request):
-        product_id = request.data.get("product_id")
-        product = get_object_or_404(Product, id=product_id)
+    def queryset_get(self, request, *args, **kwargs):
+        queryset = self.queryset.filter(user=self.request.user)
+        return queryset
 
-        favorite, created = FavoriteProduct.objects.get_or_create(user=request.user, product=product)
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)
 
-        return Response(FavoriteProductSerializer(favorite).data, status=status.HTTP_201_CREATED)
+    def post(self, request, *args, **kwargs):
+       return self.create(request, *args, **kwargs)

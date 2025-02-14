@@ -36,27 +36,55 @@ from rest_framework import serializers
 from products.models import Cart, FavoriteProduct, ProductTag, Product
 
 class CartSerializer(serializers.ModelSerializer):
+    user = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    products = ProductSerializer(many=True, read_only=True)
+    product_ids = serializers.PrimaryKeyRelatedField(
+        source = 'products',
+        queryset = Product.objects.all(),
+        many = True,
+        write_only = True
+    )
+    
     class Meta:
         model = Cart
-        fields = ["id", "user", "product", "quantity"]
+        fields = ["user", "product_ids", "products"]
+    
+    def create(self, validated_data):
+        user = validated_data.pop('user')
+        products = validated_data.pip('products')
 
-    # პროდუქტის რაოდენობა უნდა იყოს 1 ან მეტი
-    def validate_quantity(self, value):
-        if value < 1:
-            raise serializers.ValidationError("Quantity must be at least 1")
-        return value
+        cart, = Cart.objects.get_or_create(user=user)
+        cart.products.add(*products)
+
+        return cart
+
 
 
 class FavoriteProductSerializer(serializers.ModelSerializer):
+    user = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    product_id = serializers.IntegerField(write_only=True)
+
     class Meta:
         model = FavoriteProduct
-        fields = ["id", "user", "product"]
+        fields = ["id", "user", "product", "product_id"]
 
     # პროდუქტი უნდა არსებობდეს მონაცემთა ბაზაში 
     def validate_product(self, value):
         if not Product.objects.filter(id=value.id).exists():
             raise serializers.ValidationError("This product does not exist")
         return value
+    
+    def create(self, validated_data):
+        product_id = validated_data.pop('product_id')
+        user = validated_data.pop('user')
+
+        product = Product.objects.get(id=product_id)
+
+        favourite_product, crated = FavoriteProduct.objects.get_or_create(user=user, product=product)
+
+        if not crated:
+            raise serializers.ValidationError('This product isalready in Favourite items')
+        return favourite_product
 
 
 class ProductTagSerializer(serializers.ModelSerializer):
