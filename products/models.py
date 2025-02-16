@@ -11,9 +11,6 @@ class Product(TimeStampedModel, models.Model):
     tags = models.ManyToManyField("products.ProductTag", related_name='products', blank=True)
     quantity = models.PositiveIntegerField()
 
-    def average_rating(self):
-        pass
-
 
 class Review(TimeStampedModel, models.Model):
     product = models.ForeignKey('products.Product', related_name='reviews', on_delete=models.CASCADE)

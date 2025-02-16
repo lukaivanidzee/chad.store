@@ -1,5 +1,16 @@
 from rest_framework import serializers
-from products.models import Review, Product, Cart, FavoriteProduct, ProductTag, Product
+from products.models import Review, Product, Cart, FavoriteProduct, ProductTag, ProductImage
+
+class ProductTagSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductTag
+        fields = ["id", "name"]
+
+    # თაგის სახელი არ უნდა იყოს ცარიელი და უნდა იყოს უნიკალური
+    def validate_tag_name(self, value):
+        if not value.strip():
+            raise serializers.ValidationError("Tag name cannot be empty.")
+        return value
 
 
 class ReviewSerializer(serializers.ModelSerializer):
@@ -27,13 +38,32 @@ class ReviewSerializer(serializers.ModelSerializer):
 
 class ProductSerializer(serializers.ModelSerializer):
     reviews = ReviewSerializer(many=True, read_only=True)
+    tag_ids = serializers.PrimaryKeyRelatedField(
+        source='tags',
+        queryset=ProductTag.objects.all(),
+        many=True,
+        write_only=True
+    )
+
     class Meta:
-        exclude = ['created_at', 'updated_at', 'tags'] 
+        exclude = ['created_at', 'updated_at'] 
         model = Product
+    
+    def create(self, validated_data):
+        tags = validated_data.pop('tags')
+        product = Product.objects.create(**validated_data)
+        product.tags.set(tags)
+        return product
+    
+    def update(self, instace, validated_data):
+        tags = validated_data.pop('tags', None)
+        if tags is not None:
+            instace.tags.set(tags)
+        return super().update(instace, validated_data)
 
 
-from rest_framework import serializers
-from products.models import Cart, FavoriteProduct, ProductTag, Product
+
+    
 
 class CartSerializer(serializers.ModelSerializer):
     user = serializers.HiddenField(default=serializers.CurrentUserDefault())
@@ -87,13 +117,7 @@ class FavoriteProductSerializer(serializers.ModelSerializer):
         return favourite_product
 
 
-class ProductTagSerializer(serializers.ModelSerializer):
+class ProductImageSerializer(serializers.ModelSerializer):
     class Meta:
-        model = ProductTag
-        fields = ["id", "product", "tag_name"]
-
-    # თაგის სახელი არ უნდა იყოს ცარიელი და უნდა იყოს უნიკალური
-    def validate_tag_name(self, value):
-        if not value.strip():
-            raise serializers.ValidationError("Tag name cannot be empty.")
-        return value
+        model = ProductImage
+        fields = ['id', 'image', 'product']
