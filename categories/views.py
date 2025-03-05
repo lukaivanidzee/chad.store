@@ -1,35 +1,24 @@
-from rest_framework.generics import GenericAPIView
-from rest_framework.mixins import ListModelMixin, RetrieveModelMixin, CreateModelMixin
-from rest_framework.permissions import IsAuthenticated
-from categories.serializers import CategoryImageSerializer, CategorDetailSerializer, CategorySerializer
+from rest_framework.generics import ListAPIView, RetrieveAPIView, ListCreateAPIView
 from categories.models import Category, CategoryImage
+from categories.serializers import CategorySerializer, CategoryDetailSerializer, CategoryImageSerializer
 
-class CategoryListView(ListModelMixin,  GenericAPIView):
+from rest_framework.filters import SearchFilter
+
+class CategoryListView(ListAPIView):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request, *args, **kwargs):
-        return self.list(request, *args, **kwargs)
+    filter_backends = [SearchFilter]
+    search_fields = ['name']
     
-class CategoryDetailView(RetrieveModelMixin,  GenericAPIView):
+    
+class CategoryDetailView(RetrieveAPIView):
     queryset = Category.objects.all()
-    serializer_class = CategorDetailSerializer
-    permission_classes = [IsAuthenticated]
+    serializer_class = CategoryDetailSerializer
 
-    def get(self, request, *args, **kwargs):
-        return self.retrieve(request, *args, **kwargs)
-    
-class CategoryImageView(ListModelMixin, CreateModelMixin,  GenericAPIView):
+class CategoryImageViewSet(ListCreateAPIView):
     queryset = CategoryImage.objects.all()
     serializer_class = CategoryImageSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_queryset(self):
-        return self.queryset.filter(category=self.kwargs['category_id'])
-
-    def get(self, request, *args, **kwargs):
-        return self.list(request, *args, **kwargs)
     
-    def post(self, request, *args, **kwargs):
-        return self.create(request, *args, **kwargs)
+    def get_queryset(self):
+        category_id = self.kwargs['category_id']
+        return self.queryset.filter(category=category_id)

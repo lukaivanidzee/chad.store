@@ -9,7 +9,6 @@ class Category(TimeStampedModel, models.Model):
 
 class CategoryImage(TimeStampedModel, models.Model):
     image = models.ImageField(upload_to='categories/')
-    Category = models.ForeignKey('categories.Category', related_name='images', on_delete=models.CASCADE)
-    is_active = models.BooleanField(default=True)
+    category = models.ForeignKey('categories.Category', related_name='images', on_delete=models.CASCADE)
     
 
