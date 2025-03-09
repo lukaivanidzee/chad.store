@@ -49,10 +49,5 @@ class CartItem(TimeStampedModel, models.Model):
     price_at_time_of_addition = models.FloatField()
 
     def __str__(self):
-        return self.product.name
+        return f'{self.product.name} - {self.product.quantity}'
     
-class CartItem(models.Model):
-    cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name="items")
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    quantity = models.IntegerField(default=1)
-    price_of_time_addition = models.FloatField()

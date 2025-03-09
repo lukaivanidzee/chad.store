@@ -25,12 +25,14 @@ from rest_framework.filters import SearchFilter
 from products.pagination import ProductPagination
 from products.filters import ProductFilter, ReviewFilter
 
+from rest_framework.throttling import AnonRateThrottle, UserRateThrottle, ScopedRateThrottle
 # ____________________________
 
 class ProductViewSet(ModelViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     permission_classes = [IsAuthenticated]
+    throttling_classes = [UserRateThrottle]
     filter_backends = [DjangoFilterBackend, SearchFilter]
     # filterset_fields = ['price', 'categories']
     filterset_class = ProductFilter
@@ -64,6 +66,8 @@ class FavoriteProductViewSet(ModelViewSet):
     queryset = FavoriteProduct.objects.all()
     serializer_class = FavoriteProductSerializer
     permission_classes = [IsAuthenticated]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "likes"
 
     def get_queryset(self, *args, **kwargs):
         queryset = self.queryset.filter(user=self.request.user)
@@ -92,6 +96,7 @@ class ProductImageViewSet(ModelViewSet):
     queryset = ProductImage.objects.all()
     serializer_class = ProductImageSerializer
     permission_classes = [IsAuthenticated]
+    throttling_classes = [UserRateThrottle]
 
     def get_queryset(self):
         return self.queryset.filter(product__id=self.kwargs['product_pk'])
