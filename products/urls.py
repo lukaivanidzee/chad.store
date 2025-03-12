@@ -17,7 +17,7 @@ products_router.register('reviews', ReviewViewSet)
 
 router.register('favorite_products', FavoriteProductViewSet)
 router.register('cart', CartViewSet)
-router.register('cart_item', CartItemViewSet)
+router.register('cart_items', CartItemViewSet, basename='cart-items')
 router.register('tag', TagList)
 
 

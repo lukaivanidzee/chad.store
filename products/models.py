@@ -51,3 +51,6 @@ class CartItem(TimeStampedModel, models.Model):
     def __str__(self):
         return f'{self.product.name} - {self.product.quantity}'
     
+    def total_price(self):
+        return self.quantity * self.price_at_time_of_addition
+

@@ -111,3 +111,14 @@ class CartItemViewSet(ModelViewSet):
 
     def get_queryset(self):
         return self.queryset.filter(cart__user=self.request.user)
+
+    def perform_destroy(self, instance):
+        if instance.cart.user != self.request.user:
+            raise PermissionDenied("You do not have permission to delete this review.")
+        instance.delete()
+
+    def perform_update(self, serializer):
+        instance = self.get_object()
+        if instance.cart.user != self.request.user:
+            raise PermissionDenied("You do not have permission to update this item.")
+        serializer.save()
