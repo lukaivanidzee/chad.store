@@ -87,18 +87,6 @@ class FavoriteProductSerializer(serializers.ModelSerializer):
         return favorite
 
 
-class CartSerializer(serializers.ModelSerializer):
-    user = serializers.HiddenField(default=serializers.CurrentUserDefault())
-    items = CartItemSerializer(many=True, read_only=True)
-    total = serializers.SerializerMethodField()
-    
-    class Meta:
-        model = Cart
-        fields = ['id', 'user', 'items', 'total']
-        
-    def get_total(self, obj):
-        return sum(item.total_price() for item in obj.items.all())
-
 
 class CartItemSerializer(serializers.ModelSerializer):
     product = ProductSerializer(read_only=True)
@@ -132,3 +120,21 @@ class CartItemSerializer(serializers.ModelSerializer):
         instance.quantity = quantity
         instance.save()
         return instance
+    
+
+class CartSerializer(serializers.ModelSerializer):
+    user = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    items = CartItemSerializer(many=True, read_only=True)
+    total = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Cart
+        fields = ['id', 'user', 'items', 'total']
+        
+    def get_total(self, obj):
+        return sum(item.total_price() for item in obj.items.all())
+
+class ProductImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductImage
+        fields = ['id', 'image', 'product']

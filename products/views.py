@@ -1,8 +1,7 @@
 # improts
 from rest_framework.viewsets import ModelViewSet, GenericViewSet
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.generics import ListAPIView, ListCreateAPIView
-from rest_framework.mixins import CreateModelMixin, ListModelMixin, UpdateModelMixin, RetrieveModelMixin, DestroyModelMixin
+from rest_framework.mixins import CreateModelMixin, ListModelMixin
 from rest_framework.exceptions import PermissionDenied
 
 from products.models import (
@@ -25,7 +24,7 @@ from rest_framework.filters import SearchFilter
 from products.pagination import ProductPagination
 from products.filters import ProductFilter, ReviewFilter
 
-from rest_framework.throttling import AnonRateThrottle, UserRateThrottle, ScopedRateThrottle
+from rest_framework.throttling import UserRateThrottle, ScopedRateThrottle
 # ____________________________
 
 class ProductViewSet(ModelViewSet):
