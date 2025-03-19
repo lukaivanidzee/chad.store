@@ -43,8 +43,10 @@ INSTALLED_APPS = [
     "products",
     "categories",
 
+    'drf_yasg',
     'rest_framework',
     'django_filters',
+    'rest_framework_simplejwt',
 ]
 
 MIDDLEWARE = [
@@ -140,10 +142,26 @@ REST_FRAMEWORK = {
         'anon': '10/minute',
         'user': '10/minute',
         'likes': '20/minute'
-    }
+    },
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    )
 }
 
 PASSWORD_HASHERS = [
     'django.contrib.auth.hashers.PBKDF2PasswordHasher',
     'django.contrib.auth.hashers.Argon2PasswordHasher'
 ]
+
+
+SWAGGER_SETTINGS={
+    "USER_SESSION_AUTH": False,
+    "SECURITY_DEFINITIONS": {
+        "Bearer" : {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header",
+            "description": "შეიყვანეთ თქვენი access token შემდეგ ფორმატში Bearer <Token>"
+        }
+    }
+}

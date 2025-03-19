@@ -1,8 +1,7 @@
 # improts
 from rest_framework.viewsets import ModelViewSet, GenericViewSet
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.generics import ListAPIView, ListCreateAPIView
-from rest_framework.mixins import CreateModelMixin, ListModelMixin, UpdateModelMixin, RetrieveModelMixin, DestroyModelMixin
+from rest_framework.mixins import CreateModelMixin, ListModelMixin
 from rest_framework.exceptions import PermissionDenied
 
 from products.models import (
@@ -25,7 +24,9 @@ from rest_framework.filters import SearchFilter
 from products.pagination import ProductPagination
 from products.filters import ProductFilter, ReviewFilter
 
-from rest_framework.throttling import AnonRateThrottle, UserRateThrottle, ScopedRateThrottle
+from rest_framework.throttling import UserRateThrottle, ScopedRateThrottle
+
+from products.permissions import IsObjectOwnerReadOnly
 # ____________________________
 
 class ProductViewSet(ModelViewSet):
@@ -40,10 +41,11 @@ class ProductViewSet(ModelViewSet):
     pagination_class = ProductPagination
     
     
+    
 class ReviewViewSet(ModelViewSet):
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsObjectOwnerReadOnly]
     filter_backends = [DjangoFilterBackend]
     # filterset_fields = ['rating']
     filterset_class = ReviewFilter

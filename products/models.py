@@ -2,6 +2,7 @@ from django.db import models
 from django.core.validators import MaxValueValidator
 from config.model_utils.models import TimeStampedModel
 from products.choices import Currency
+from users.models import User
 
 class Product(TimeStampedModel, models.Model):
     name = models.CharField(max_length=255)
@@ -10,6 +11,7 @@ class Product(TimeStampedModel, models.Model):
     currency = models.CharField(max_length=255, choices=Currency.choices, default=Currency.GEL)
     tags = models.ManyToManyField("products.ProductTag", related_name='products', blank=True)
     quantity = models.PositiveIntegerField()
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="products")
 
     def average_rating(self):
         pass
