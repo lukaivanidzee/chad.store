@@ -49,12 +49,6 @@ class ProductViewSet(ModelViewSet):
             serializer.save(password=make_password(self.request.data['password']))
         else:
             serializer.save()
-
-    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
-    def me(self, request):
-        serializer = self.get_serializer(request.user)
-        return Response(serializer.data)
-    
     
 class ReviewViewSet(ModelViewSet):
     queryset = Review.objects.all()
