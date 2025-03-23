@@ -25,8 +25,12 @@ from products.pagination import ProductPagination
 from products.filters import ProductFilter, ReviewFilter
 
 from rest_framework.throttling import UserRateThrottle, ScopedRateThrottle
+from rest_framework.parsers import MultiPartParser, FormParser
+
 
 from products.permissions import IsObjectOwnerReadOnly
+from django.contrib.auth.hashers import make_password
+
 # ____________________________
 
 class ProductViewSet(ModelViewSet):
@@ -40,6 +44,16 @@ class ProductViewSet(ModelViewSet):
     search_fields = ['name', 'description']
     pagination_class = ProductPagination
     
+    def perform_update(self, serializer):
+        if 'password' in self.request.data:
+            serializer.save(password=make_password(self.request.data['password']))
+        else:
+            serializer.save()
+
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    def me(self, request):
+        serializer = self.get_serializer(request.user)
+        return Response(serializer.data)
     
     
 class ReviewViewSet(ModelViewSet):
@@ -99,6 +113,7 @@ class ProductImageViewSet(ModelViewSet):
     serializer_class = ProductImageSerializer
     permission_classes = [IsAuthenticated]
     throttling_classes = [UserRateThrottle]
+    parser_classes = [MultiPartParser, FormParser]
 
     def get_queryset(self):
         return self.queryset.filter(product__id=self.kwargs['product_pk'])
